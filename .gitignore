@@ -1,0 +1,36 @@
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Raw and participant-level datasets
+*.dta
+*.sav
+*.parquet
+*.feather
+data/
+datasets/
+Datasets/
+
+# Generated experiment files
+*.pkl
+*.pickle
+*.joblib
+*.npy
+*.npz
+*.log
+
+# Local configuration and credentials
+.env
+.env.*
+*.key
+secrets/
+
+# Temporary files
+tmp/
+temp/
+.DS_Store
+Thumbs.db
