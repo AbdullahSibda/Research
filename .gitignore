@@ -1,36 +1,71 @@
-
-# Python
+# =============================================================================
+# Python bytecode and tooling caches
+# =============================================================================
 __pycache__/
 *.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyright/
+.coverage
+.coverage.*
+htmlcov/
+
+# =============================================================================
+# Local Python environments and build artifacts
+# =============================================================================
 .venv/
 venv/
-.pytest_cache/
+env/
+ENV/
+*.egg-info/
+build/
+dist/
 
-# Raw and participant-level datasets
-*.dta
-*.sav
+# =============================================================================
+# Editors, operating systems, and local configuration
+# =============================================================================
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+.env
+.env.*
+!.env.example
+*.log
+
+# =============================================================================
+# Generated research results (RQ1, RQ1.5, and future RQ2)
+# =============================================================================
+/Outputs/
+/ContinuousResults/
+/MixedResults/
+/PlottingResults/
+/results/
+/figures/
+/plots/
+
+# =============================================================================
+# Local or restricted research datasets and temporary files
+# =============================================================================
+/data/raw/
+/data/interim/
+/data/processed/
+/datasets/
 *.parquet
 *.feather
-data/
-datasets/
-Datasets/
-
-# Generated experiment files
+*.h5
+*.hdf5
 *.pkl
 *.pickle
 *.joblib
 *.npy
 *.npz
-*.log
+*.sqlite
+*.db
+*.tmp
+*.bak
 
-# Local configuration and credentials
-.env
-.env.*
-*.key
-secrets/
-
-# Temporary files
-tmp/
-temp/
-.DS_Store
-Thumbs.db
+# NOTE: Do not ignore all CSV/PDF/PNG files: small fixtures, documentation,
+# published figure assets, and reproducibility metadata may be tracked.
+# NOTE: .gitignore does not untrack files already committed to Git.

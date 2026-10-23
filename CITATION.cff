@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use this research software, please cite this repository."
+type: software
+title: "Bayesian Network Structure Learning for Mixed Data"
+authors:
+  - family-names: "Sibda"
+    given-names: "Abdullah"
+# Confirm the spelling and preferred citation name before publishing.
+# Add repository-code, url, version, and date-released after confirming them.
+# Add identifiers / preferred-citation once the final thesis/report has a stable citation.
+keywords:
+  - Bayesian networks
+  - structure learning
+  - mixed data
+  - synthetic benchmarking
+license: MIT

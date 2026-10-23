@@ -1,0 +1,25 @@
+# =============================================================================
+# Research Question 1 / RQ1.5 — Python dependencies
+# =============================================================================
+# Covers the continuous and native-mixed benchmarks, their plotting scripts,
+# and the original ground-truth generators and learning engines.
+# Versions are intentionally not pinned: the exact original experiment
+# environment has not yet been captured or verified.
+# =============================================================================
+
+# Numerical arrays and tabular datasets
+numpy
+pandas
+
+# Scientific distributions, numerical optimisation and special functions
+scipy
+
+# Regression and related scoring utilities
+scikit-learn
+
+# Graph construction and graph-recovery metrics
+networkx
+
+# Final paper plots and generator visualisations
+matplotlib
+seaborn
