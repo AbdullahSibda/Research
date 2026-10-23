@@ -1,25 +1,22 @@
-# =============================================================================
-# Research Question 1 / RQ1.5 — Python dependencies
-# =============================================================================
-# Covers the continuous and native-mixed benchmarks, their plotting scripts,
-# and the original ground-truth generators and learning engines.
-# Versions are intentionally not pinned: the exact original experiment
-# environment has not yet been captured or verified.
-# =============================================================================
+# Python dependencies for RQ1, RQ1.5, and RQ2.
+# The historical full-experiment environment was not frozen; versions are
+# deliberately unpinned. Record `python -m pip freeze` for reproduction runs.
 
-# Numerical arrays and tabular datasets
+# Arrays, tabular data and scientific computing
 numpy
 pandas
-
-# Scientific distributions, numerical optimisation and special functions
 scipy
 
-# Regression and related scoring utilities
+# Regression, validation, imputation support and metrics
 scikit-learn
 
-# Graph construction and graph-recovery metrics
+# Bayesian network graph representations
 networkx
 
-# Final paper plots and generator visualisations
+# Scientific figures
 matplotlib
 seaborn
+
+# Hybrid V3 scorer: PyMC/PyTensor-backed continuous families
+pymc
+pytensor

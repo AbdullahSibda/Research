@@ -1,44 +1,46 @@
-# Bayesian Network Structure Learning for Mixed Data
+# Bayesian Network Structure Learning for Continuous and Mixed Data
 
-Research code for comparing **discrete**, **continuous**, and **hybrid** Bayesian-network structure learning, with synthetic benchmarking and a planned application to longitudinal ageing data.
+Research code accompanying an Honours study comparing **Discrete**, **Continuous**, and **Hybrid** Bayesian-network (BN) structure learning. The repository contains synthetic benchmark experiments (RQ1 and the native-mixed extension, RQ1.5) and an application to the English Longitudinal Study of Ageing (ELSA; RQ2).
 
-> **Repository status (October 2026):** The RQ1/RQ1.5 benchmark and plotting scripts have been migrated and smoke-tested. RQ2 integration and its documentation are forthcoming. This README documents the available RQ1 workflow; it does not imply that the entire research pipeline has already been migrated.
+The repository provides **source code, not restricted participant data or precomputed full research results**. The original research environment's exact package versions have not been recovered; migrating and smoke-testing code does not establish full numerical reproduction of every reported result.
 
-## Research overview
-
-The project investigates how different Bayesian-network representations behave when discovering dependency structures in data containing continuous and discrete variables.
-
-- **Discrete baseline:** A fully discrete approach, including discretisation when the ground truth is continuous.
-- **Continuous baseline:** A continuous-variable structure-learning approach.
-- **Hybrid approach:** A mixed-variable Bayesian network with conditional scoring for continuous-to-continuous (CC), continuous-to-discrete (CD), discrete-to-continuous (DC), and discrete-to-discrete (DD) node families.
-
-The benchmarks compare graph recovery and probabilistic fit, including **structural Hamming distance (SHD)** and **KL divergence**. The common-resolution KL evaluation places the three representations on a shared comparison basis. The reported structural metrics measure recovery of the known ground-truth graph in synthetic experiments.
-
-## Repository layout
+## Repository structure
 
 ```text
 .
 ├── experiments/
-│   └── rq1/
-│       ├── continuous_benchmark.py
-│       ├── mixed_benchmark.py
-│       ├── continuous_plots.py
-│       └── mixed_plots.py
+│   ├── rq1/
+│   │   ├── continuous_benchmark.py
+│   │   ├── mixed_benchmark.py
+│   │   ├── continuous_plots.py
+│   │   └── mixed_plots.py
+│   └── rq2/
+│       ├── missingness_audit.py
+│       ├── generate_ensembles.py
+│       ├── m_convergence.py
+│       ├── analyse_graph_ensembles.py
+│       ├── heldout_inference.py
+│       ├── advantage_plots.py
+│       ├── dementia_plots.py
+│       └── consensus_plots.py
 ├── src/
-│   ├── hybrid_bn/          # Structure-learning and scoring implementations
-│   └── generators/         # Synthetic ground-truth generators
+│   ├── generators/          # Synthetic ground-truth data generators
+│   ├── hybrid_bn/           # Discrete, continuous and consolidated Hybrid V3 learners
+│   │   └── HybridV3_CDv3Candidate/  # Modular CC/CD/DC/DD hybrid scoring engine
+│   └── imputation/          # 13 variable-specific stochastic ELSA imputers
 ├── requirements.txt
-└── README.md
+├── README.md
+├── LICENSE
+└── CITATION.cff
 ```
 
-The diagram shows the intended RQ1 source layout; generated result folders and any additional repository files are omitted. The benchmark scripts contain their evaluation routines as readable, namespaced Python code and use model/generator implementations under `src/`.
+The output directories shown below are **created by the scripts** and are not required to exist in a fresh checkout. The raw ELSA `.dta` file, in contrast, must be obtained independently under the applicable data-access terms.
 
-## Requirements and setup
+## Installation
 
-- **Python 3.13** is the version used for the post-migration smoke tests on Windows. Exact historical package versions for the original research runs have not yet been established.
-- The RQ1 `requirements.txt` includes: `numpy`, `pandas`, `scipy`, `scikit-learn`, `networkx`, `matplotlib`, and `seaborn`.
+A Windows/Python 3.13 setup has been used for migration smoke tests. Package versions are currently unpinned; this is a **dependency list**, not a validated environment lock file. PyMC and PyTensor are included because the Hybrid implementation has PyMC/PyTensor-backed scoring components.
 
-From the repository root, create a virtual environment and install the dependencies:
+From the repository root in PowerShell:
 
 ```powershell
 python -m venv .venv
@@ -47,86 +49,172 @@ python -m pip install -r requirements.txt
 python -m pip check
 ```
 
-If PowerShell activation is restricted, invoke `.\.venv\Scripts\python.exe` directly. The scripts also accept `--project-root` to specify the repository root explicitly.
+For an auditable run, capture `python --version` and `python -m pip freeze > environment_freeze.txt` in your local run records. Do not assume modern dependency versions reproduce the historic full benchmark bit-for-bit.
 
-## Research Question 1: Continuous ground-truth benchmark
+## RQ1: Synthetic continuous-ground-truth experiments
 
-**Runner:** `experiments/rq1/continuous_benchmark.py`
+`experiments/rq1/continuous_benchmark.py` compares all three learners on **unimodal, skew, multimodal, and skew-multimodal** continuous generators. The full experimental design uses seeds **0–9** and sample sizes **100, 250, 500, 1,000, 2,000, 3,000, 4,000, 5,000**.
 
-Four synthetic continuous-generator families are studied: **unimodal**, **skew**, **multimodal**, and **skew-multimodal** (`skew_multi`). The complete benchmark uses seeds 0–9 and sample sizes **100, 250, 500, 1,000, 2,000, 3,000, 4,000, and 5,000**. It evaluates the continuous, discrete, and hybrid learners against the known ground-truth structures.
-
-The frozen comparison uses a maximum of **three parents**, structure-search caps of **300 iterations** for the baseline and hybrid models, and **Hybrid ADD2 disabled**. Do not change these settings if attempting to reproduce the research configuration.
-
-Inspect the supported options before running:
+The synthetic experiments evaluate graph recovery (including SHD) and probabilistic fit using a common-resolution KL comparison. The research configuration uses a maximum of **three parents**, a structure-search iteration cap of **300**, and Hybrid ADD2 disabled. Reduced test runs are useful for checking installation, but they are **not** the full reported experiment.
 
 ```powershell
 python experiments/rq1/continuous_benchmark.py --help
 ```
 
-A complete benchmark can be computationally expensive. For a restricted run, specify `--generators`, `--seeds`, and `--sample-sizes`; preserve the frozen structure-search configuration. Monte Carlo evaluation options are exposed separately for diagnostic runs, but reducing them changes KL-estimate precision.
-
-## Research Question 1.5: Native mixed-variable benchmark
-
-**Runner:** `experiments/rq1/mixed_benchmark.py`
-
-This benchmark uses synthetic data with **discrete and continuous nodes in the ground truth**. The design covers the same four generator families, seeds 0–9, and sample sizes **100, 500, 2,000, and 5,000**. It compares the same three learning paradigms using graph-recovery and probabilistic metrics.
-
-The frozen structure-learning contract requires **`max_parents=3`, `max_iter=300`, and Hybrid ADD2 disabled**. The runner rejects incompatible settings (for example, `--max-iter 10`).
-
-Check dependencies without launching a full experiment:
-
-```powershell
-python experiments/rq1/mixed_benchmark.py --preflight-only
-```
-
-View all controls:
-
-```powershell
-python experiments/rq1/mixed_benchmark.py --help
-```
-
-Use `--no-legacy-reuse` when you want to rule out reusing existing legacy results. Because this benchmark can be expensive, inspect and set the output directory before starting a complete run.
-
-## Reproduce the five final RQ1 figures
-
-Plotting reads **completed benchmark CSVs**; it does not retrain models. The one-cell smoke-test data are insufficient for reproducing full learning curves.
-
-| Script | Figures produced | Required input files |
-| --- | --- | --- |
-| `continuous_plots.py` | Common-resolution KL (4 panels); SHD (4 panels) | `master_model_results.csv` |
-| `mixed_plots.py` | Common-support KL (4 panels); SHD (4 panels); directed-edge quadrant F1 | `mixed_model_results.csv`, `mixed_quadrant_diagnostics.csv` |
-
-Examples from the repository root (replace the result directories with the paths containing your **full** experiment outputs):
+The final continuous benchmark figures can be reproduced from the complete output table `master_model_results.csv`:
 
 ```powershell
 python experiments/rq1/continuous_plots.py `
   --results-dir "C:\path\to\full\continuous\results" `
   --output-dir "results\rq1\figures\continuous"
+```
 
+## RQ1.5: Native mixed-variable benchmark
+
+`experiments/rq1/mixed_benchmark.py` evaluates synthetic ground-truth networks containing both discrete and continuous variables, across the same four generator families, seeds **0–9**, and sample sizes **100, 500, 2,000, 5,000**. The frozen configuration again uses `max_parents=3`, `max_iter=300`, and Hybrid ADD2 disabled.
+
+```powershell
+python experiments/rq1/mixed_benchmark.py --preflight-only
+python experiments/rq1/mixed_benchmark.py --help
+```
+
+The final mixed figures use `mixed_model_results.csv` and `mixed_quadrant_diagnostics.csv`, including a CC/CD/DC/DD directed-edge quadrant F1 plot:
+
+```powershell
 python experiments/rq1/mixed_plots.py `
   --results-dir "C:\path\to\full\mixed\results" `
   --output-dir "results\rq1\figures\mixed" `
   --quadrant-n 5000
 ```
 
-The scripts write a **PNG and vector PDF** of each figure. The quadrant F1 figure summarises directed-edge recovery across CC, CD, DC, and DD categories at the selected sample size.
+## RQ2: ELSA missingness, graph ensembles and held-out inference
 
-## Migration validation and reproducibility limits
+### Data access and local input
 
-The migrated continuous and native-mixed runners both passed an end-to-end **single-cell smoke test** with `unimodal`, seed `0`, and sample size `100`. The matching original and migrated results agreed exactly on the **reported structural metrics** for all three learner types in both benchmarks, including SHD and F1. Hybrid structural quadrant diagnostics also matched for the continuous benchmark test cell.
+ELSA's harmonised Stata dataset is **not distributed in this repository**. Obtain it through an authorised source and place it locally at:
 
-The smoke tests deliberately used lower Monte Carlo sample counts for probabilistic evaluations. **Full-precision KL numerical parity was not established** by these tests, and the smoke-test KL values should **not** replace the original full experimental results. Information-retention diagnostics are not among the five report figures documented here.
+```text
+Datasets/gh_elsa_h.dta
+```
 
-For a reproducible comparison, record the run arguments, seeds, full dependency versions, result manifests, and input hashes. Do not compare KL estimates across runs with different evaluation settings as though they were identically configured.
+Alternatively, use a local Windows junction to an existing `Datasets` directory, or use `missingness_audit.py --dta` for the audit. Phase 1 expects the `Datasets/gh_elsa_h.dta` location. Do not commit the source data, individual records, completion tables, or participant-level audit CSVs.
 
-## Research Question 2
+The pipeline studies ELSA **waves 2, 4, 6 and 8**, using **17 substantive predictors**, same-wave Dementia, and process indicators including Proxy, SelfCompletion and Nurse. This is a **contemporaneous** analysis: it does not claim to predict Wave 10 Dementia from early-wave covariates. The missingness audit also explores Wave 10 outcomes as a separate diagnostic, but that does not make the principal RQ2 evaluation longitudinal forecasting.
 
-RQ2 applies the methods to longitudinal ageing data, including preprocessing, missing-data handling, Bayesian-network ensembles, and downstream analyses. **The RQ2 code migration is pending**; commands and the final dependency list will be added after that workflow has been checked in the repository.
+### Run in order
 
-## Notes on data and outputs
+Run the commands below **from the repository root**. The full default pipeline is computationally expensive; review `--help` first, and retain the frozen experimental settings for a research reproduction run.
 
-Synthetic benchmark output files, logs, cached model fits, and figures are generated artifacts. Keep large or restricted datasets out of Git unless you have confirmed that redistribution is permitted. The dataset and output retention policy should be reflected in `.gitignore` before publishing additional research artifacts.
+**1. Generate the canonical participant-completeness file.** This audit preserves Stata special missing codes and creates the frozen input needed for cohort selection.
+
+```powershell
+python experiments/rq2/missingness_audit.py --help
+python experiments/rq2/missingness_audit.py
+```
+
+Its output includes:
+
+```text
+DataProcessing/missingness_final_audit/12i_participant_wave_completeness_contemporaneous.csv
+```
+
+This CSV contains participant-level information and **must remain local**. The audit also produces CASP19, recall, grip-timing and dementia/missingness diagnostics. If a raw combined Wave 8/9 nurse file is unavailable, the audit cannot establish actual grip-measurement timing from the harmonised field alone.
+
+**2. Preflight and generate leakage-safe completion/graph ensembles.** The original incomplete cohort is split into five Dementia-stratified folds **before** imputation. Each of 13 variable-specific stochastic imputers is fitted on training data only and used to make separate training/test draws. The default design generates **25 completions per fold**, with graphs learned by Discrete, Continuous and Hybrid V3 learners.
+
+```powershell
+python experiments/rq2/generate_ensembles.py --preflight-only
+python experiments/rq2/generate_ensembles.py --help
+python experiments/rq2/generate_ensembles.py
+```
+
+Core output:
+
+```text
+Results/MasterPipeline/CV_Ensembles/
+```
+
+For a limited smoke test instead of a full experiment:
+
+```powershell
+python experiments/rq2/generate_ensembles.py --waves 2 --m-max 1 --fold-only 1 --models discrete --workers 1
+```
+
+**3. Examine M-convergence and learned structures.** These scripts consume saved Phase 1 DAGs; they do **not** learn new graphs. Run them after completing the requested ensemble scope.
+
+```powershell
+python experiments/rq2/m_convergence.py --help
+python experiments/rq2/m_convergence.py
+python experiments/rq2/analyse_graph_ensembles.py
+```
+
+M-convergence examines checkpoints **M = 10, 15, 20, 25**, so a one-completion smoke test does not suffice. The graph-ensemble analysis writes structural summaries, including `ScientificResults/dementia_neighbourhood.csv`, used by the report's structural heatmap.
+
+**4. Evaluate fixed-DAG held-out inference.** Phase 2 reloads the saved Phase 1 completions and DAGs, fits local conditional distributions to TRAIN, evaluates observed held-out outcomes, then aggregates ensemble predictive distributions. The eight pseudo-targets are **Recall, Grip, CASP19, Loneliness, Dementia, ManagingMeds, LowerMobility, CESD**. Out-of-fold predictions are stitched before final metrics, with paired bootstrap comparisons.
+
+```powershell
+python experiments/rq2/heldout_inference.py --help
+python experiments/rq2/heldout_inference.py --preflight-only
+python experiments/rq2/heldout_inference.py
+```
+
+Core output:
+
+```text
+Results/MasterPipeline/CV_HeldoutInference/
+```
+
+Hybrid Loneliness inference uses **256 quadrature nodes per bin (768 total)** with a chunk size of **32**, replacing the historical separate Loneliness correction script. Other targets retain the default quadrature settings. The corrected pathway is incorporated into inference with cache/provenance safeguards; its full numerical equivalence to the old corrective rerun has **not yet been established**.
+
+A limited Phase 1 → Phase 2 handoff test can use:
+
+```powershell
+python experiments/rq2/heldout_inference.py --waves 2 --fold-only 1 --completion-only 1 --m-max 1 --models discrete --targets Dementia --skip-bootstrap --skip-plots
+```
+
+This creates a **partial** set of held-out predictions. It does not create valid full five-fold out-of-fold performance metrics or final report figures.
+
+### Generate only the six RQ2 report figures
+
+Run these **only after the required complete results exist**, from the repository root:
+
+```powershell
+# Figures 6–9: paired-advantage LogLoss, F1, NLPD and RMSE forests
+python experiments/rq2/advantage_plots.py
+
+# Figure 10: Dementia F1 vs decision threshold
+python experiments/rq2/dementia_plots.py
+
+# Figure 11: Dementia-neighbourhood stability heatmap
+python experiments/rq2/consensus_plots.py --project-root .
+```
+
+The paired-advantage plotter reads `Results/MasterPipeline/CV_HeldoutInference/metrics/model_comparisons.csv` directly, and the Dementia plotter reads the Phase 2 Dementia threshold curves. Both write to the Phase 2 `plots/report/` directory by default. The structural heatmap reads `ScientificResults/dementia_neighbourhood.csv` and writes to `ScientificPlots/`.
+
+The six figures retained from the research report are:
+
+| Figure | Content |
+| --- | --- |
+| 6 | Hybrid paired advantage: LogLoss |
+| 7 | Hybrid paired advantage: F1 (Dementia excluded) |
+| 8 | Hybrid paired advantage: NLPD |
+| 9 | Hybrid paired advantage: RMSE |
+| 10 | Dementia F1 versus decision threshold |
+| 11 | Hybrid Dementia-neighbourhood stability heatmap |
+
+Extra exploratory network diagrams, temporal adjacency trajectories, split-wave forests and additional heatmaps have been omitted from the final plotting scripts. The forest plotter consistently interprets **positive advantage as Hybrid performing better**. The source CSV must contain the corresponding paired bootstrap confidence intervals; plotting does not rerun the bootstrap.
+
+## Verification status
+
+- **RQ1/RQ1.5:** Migrated single-cell smoke tests checked synthetic structure-learning interfaces and reported structural metrics. Full-precision KL and full-grid numerical equivalence have not been established.
+- **RQ2 Phase 1:** Preflight passed with the local ELSA inputs and all 13 imputers/three learner modules loaded; a Wave 2, Fold 1, M 1, Discrete smoke run completed successfully.
+- **RQ2 Phase 2:** The same single-cell Discrete Dementia test produced **1,833 held-out predictions**. The reconstructed representation matched, and the fixed-DAG refit score difference was approximately **1.455 × 10⁻¹¹**. Final aggregate metrics correctly remained unavailable because other folds were not run.
+- **Remaining checks:** Full five-fold reproduction, Hybrid inference, corrected Loneliness numerical parity and final plots from the original completed results remain unverified in the migrated environment.
+
+## Generated outputs and privacy
+
+The following locations are generated locally and should be gitignored: `Datasets/`, `DataProcessing/`, `Results/` (or `results/`), `ScientificResults/`, `ScientificPlots/`, Python caches and virtual environments. **Only generated directories are recreated automatically; raw ELSA data are not downloaded or generated by the code.** The missingness audit must run before Phase 1 unless its canonical cohort file has already been produced locally. If a path is ignored after files have already been committed, `.gitignore` alone does not erase those files from Git history.
 
 ## License and citation
 
-A license and formal citation details have not yet been specified in the repository materials reviewed for this README. Add them once the intended reuse terms and final research-report citation are confirmed.
+Consult the repository's `LICENSE` and `CITATION.cff` for reuse and citation information. These apply to the original research code, **not** to redistribution of the restricted ELSA dataset.
