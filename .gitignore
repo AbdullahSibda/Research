@@ -16,6 +16,7 @@ htmlcov/
 # =============================================================================
 .venv/
 venv/
+.venv-tetrad/
 env/
 ENV/
 *.egg-info/
@@ -44,6 +45,7 @@ Thumbs.db
 /results/
 /figures/
 /plots/
+/outputs/
 
 # =============================================================================
 # Local or restricted research datasets and temporary files

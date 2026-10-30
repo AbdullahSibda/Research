@@ -1,0 +1,9 @@
+# Optional environment for experiments/rq1/andrews_dg_bic_benchmark.py.
+# Requires a working Java JDK 21 installation and Git.
+# Tested py-tetrad Git revision; not a locked transitive dependency environment.
+numpy
+pandas
+scipy
+networkx
+jpype1
+py-tetrad @ git+https://github.com/cmu-phil/py-tetrad.git@3e9c1bf101e3490f778622afdf868768a78cf1ac

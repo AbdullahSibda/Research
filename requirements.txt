@@ -20,3 +20,6 @@ seaborn
 # Hybrid V3 scorer: PyMC/PyTensor-backed continuous families
 pymc
 pytensor
+
+# Optional DG-BIC + FGES (Java/Tetrad) requirements are kept separate.
+# Install with: python -m pip install -r requirements-tetrad.txt
